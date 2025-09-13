@@ -49,7 +49,7 @@ rules = {
     "Суффиксы -ек, -ик в словах, их правописание. Правописание суффикса -ок после шипящих": "После шипящих под ударением пишется о: дружок, пирожок.",
     "Правописание приставок": "Приставки пишутся едино: до-, по-, под-, над-, в-, с-, от-, за- и др.",
     "Правописание букв ы, и после ц. Правописание имён существительных на -ий, -ия, -ие": "После ц пишется и в корне: цирк. Исключения: цыган, цыпленок. Существительные на -ие: знание, умение.",
-    "Правописание слов с разделительными твёрдым и мягким знаками": "Разделительный ь пишется после согласных перед е, ё, ю, я: вьюга. Разделительный ъ пишется после приставок на согласный перед е, ё, ю, я: подъезд.",
+    "Pravopisanie slov s razdelnymi tverdym i myagkim znakami": "Razdelitelnyj ь pishetsya posle soglasnyh pered e, ё, yu, ya: v'yuga. Razdelitelnyj ъ pishetsya posle pristavok na soglasnyj pered e, ё, yu, ya: pod'ezd.",
     "Части речи": "Основные группы слов: имя существительное, прилагательное, глагол, местоимение, числительное, наречие, предлог, союз, частица, междометие.",
     "Часть речи — имя существительное": "Обозначает предмет и отвечает на вопросы кто? что?",
     "Начальная форма существительных. Род существительных": "Начальная форма — именительный падеж единственного числа. Род: мужской, женский, средний.",
@@ -98,14 +98,20 @@ async def get_rule(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def run_bot():
     """Запуск бота"""
-    application = Application.builder().token(TOKEN).build()
-    
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("rules", list_rules))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_rule))
-    
-    logger.info("Бот запускается...")
-    application.run_polling()
+    try:
+        application = Application.builder().token(TOKEN).build()
+        
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("rules", list_rules))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_rule))
+        
+        logger.info("Бот запускается...")
+        logger.info(f"Токен: {TOKEN[:10]}...")  # Логируем начало токена
+        application.run_polling()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
+        raise
 
 # Flask веб-сервер для Render
 app = Flask(__name__)
