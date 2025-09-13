@@ -1,9 +1,7 @@
 import os
 import logging
-import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-from flask import Flask
 
 # Настройка логирования
 logging.basicConfig(
@@ -96,8 +94,8 @@ async def get_rule(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     await update.message.reply_text("Правило не найдено. Используй /rules, чтобы увидеть список тем.")
 
-def run_bot():
-    """Запуск бота в основном потоке"""
+def main():
+    """Основная функция запуска бота"""
     try:
         application = Application.builder().token(TOKEN).build()
         
@@ -114,23 +112,5 @@ def run_bot():
         logger.error(f"Ошибка при запуске бота: {e}")
         raise
 
-# Flask веб-сервер для Render
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Bot is running!"
-
-def run_web_server():
-    """Запуск веб-сервера в отдельном потоке"""
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
-
 if __name__ == "__main__":
-    # Запускаем веб-сервер в отдельном потоке
-    web_thread = threading.Thread(target=run_web_server)
-    web_thread.daemon = True
-    web_thread.start()
-    
-    # Запускаем бота в основном потоке
-    run_bot()
+    main()
