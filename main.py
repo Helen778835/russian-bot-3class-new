@@ -1,7 +1,6 @@
 import os
 import logging
 import threading
-import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from flask import Flask
@@ -40,7 +39,7 @@ rules = {
     "Окончание. Формы слова. Различие однокоренных форм слова": "Окончание изменяется для связи слов в предложении. Формы слова — изменения одного слова.",
     "Нулевое окончание. Слова без окончаний. Алгоритм выделения окончания": "Нулевое окончание — не выражено звуками. Чтобы найти окончание, нужно изменить слово.",
     "Приставка. Образование слов с помощью приставки": "Приставка стоит перед корнем. Образует новые слова: делать → переделать.",
-    "Суффикс как значимая часть слова. Алgoritm выделения в слове суффикса": "Суффикс стоит после корня. Для нахождения нужно подобрать однокоренные слова.",
+    "Суффикс как значимая часть слова. Алгоритм выделения в слове суффикса": "Суффикс стоит после корня. Для нахождения нужно подобрать однокоренные слова.",
     "Основа слова. Разбор слова по составу. Анализ модели состава слова": "Основа — часть слова без окончания. Разбор: окончание → основа → приставка → корень → суффикс.",
     "Правописание слов с двумя безударными гласными в корне слова": "Проверяются ударением: два безударных гласных требуют двойной проверки.",
     "Правописание безударных гласных, парных по глухости/звонкости согласных звуков. О/Ё после шипящих": "Безударные гласные проверяются ударением. После шипящих под ударением пишется ё, кроме исключений.",
@@ -98,12 +97,8 @@ async def get_rule(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Правило не найдено. Используй /rules, чтобы увидеть список тем.")
 
 def run_bot():
-    """Запуск бота"""
+    """Запуск бота в основном потоке"""
     try:
-        # Создаем новый event loop для этого потока
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
         application = Application.builder().token(TOKEN).build()
         
         application.add_handler(CommandHandler("start", start))
@@ -113,7 +108,6 @@ def run_bot():
         logger.info("Бот запускается...")
         logger.info(f"Токен: {TOKEN[:10]}...")
         
-        # Запускаем бота в созданном event loop
         application.run_polling()
         
     except Exception as e:
@@ -128,15 +122,15 @@ def home():
     return "Bot is running!"
 
 def run_web_server():
-    """Запуск веб-сервера"""
+    """Запуск веб-сервера в отдельном потоке"""
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 if __name__ == "__main__":
-    # Запускаем бота в отдельном потоке
-    bot_thread = threading.Thread(target=run_bot)
-    bot_thread.daemon = True
-    bot_thread.start()
+    # Запускаем веб-сервер в отдельном потоке
+    web_thread = threading.Thread(target=run_web_server)
+    web_thread.daemon = True
+    web_thread.start()
     
-    # Запускаем веб-сервер в основном потоке
-    run_web_server()
+    # Запускаем бота в основном потоке
+    run_bot()
