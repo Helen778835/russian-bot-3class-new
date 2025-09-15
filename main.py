@@ -26,7 +26,7 @@ def run_flask():
 # ---------- НАСТРОЙКИ БОТА ----------
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# ---------- БАЗА ПРАВИЛ (3 класс) ----------
+# ---------- БАЗА ПРАВИЛ (короткая версия) ----------
 RUSSIAN_RULES = {
     "предложение и словосочетание": {
         "title": "📝 Предложение и словосочетание",
@@ -110,11 +110,47 @@ async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------- ОБРАБОТКА ----------
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = norm(update.message.text)
+
+    # Реакция на кнопки разделов
+    if msg == "синтаксис":
+        await update.message.reply_text(
+            "📚 Темы по синтаксису:\n• Предложение и словосочетание\n• Виды предложений по цели высказывания\n• Главные и второстепенные члены предложения",
+            reply_markup=main_keyboard()
+        )
+        return
+    elif msg == "орфография":
+        await update.message.reply_text(
+            "✍️ Темы по орфографии:\n• Жи-ши\n• Ча-ща\n• Чу-щу",
+            reply_markup=main_keyboard()
+        )
+        return
+    elif msg == "части речи":
+        await update.message.reply_text(
+            "📦 Части речи:\n• Имя существительное\n• Имя прилагательное\n• Местоимение\n• Глагол",
+            reply_markup=main_keyboard()
+        )
+        return
+    elif msg == "глаголы":
+        await update.message.reply_text(
+            "⚡ Темы по глаголу:\n• Времена глаголов\n• Морфологический разбор глагола",
+            reply_markup=main_keyboard()
+        )
+        return
+    elif msg == "все темы":
+        await cmd_rules(update, context)
+        return
+    elif msg == "помощь":
+        await cmd_help(update, context)
+        return
+
+    # Проверка по базе правил
     for key, data in RUSSIAN_RULES.items():
         if msg in key or key in msg:
             resp = f"📖 <b>{data['title']}</b>\n\n<b>Правило:</b> {data['rule']}\n\n<b>Пример:</b> {data['example']}"
             await update.message.reply_text(resp, parse_mode="HTML", reply_markup=main_keyboard())
             return
+
+    # Если ничего не найдено
     await update.message.reply_text("❌ Тема не найдена. Используй /rules.", reply_markup=main_keyboard())
 
 # ---------- ЗАПУСК ----------
