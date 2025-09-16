@@ -72,25 +72,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("❌ Тема не найдена. Используй /rules")
 
-def setup_app():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("rules", cmd_rules))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    return app
-
-def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    web_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
-
 def main():
     if not BOT_TOKEN:
         logger.error("❌ BOT_TOKEN не найден!")
         return
-    threading.Thread(target=run_flask, daemon=True).start()
-    app = setup_app()
+
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("help", cmd_help))
+    app.add_handler(CommandHandler("rules", cmd_rules))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    logger.info("✅ Бот запущен...")
     app.run_polling(drop_pending_updates=True)
+
 
 if __name__ == "__main__":
     main()
