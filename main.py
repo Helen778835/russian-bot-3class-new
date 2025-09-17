@@ -1,4 +1,12 @@
+import zipfile
 import os
+
+# Создаём рабочую директорию для файлов
+base_dir = "/mnt/data/russian_bot_fixed"
+os.makedirs(base_dir, exist_ok=True)
+
+# main.py содержимое
+main_py_content = """import os
 import logging
 from flask import Flask
 from threading import Thread
@@ -20,9 +28,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- Flask для Render ---
-web_app = Flask(__name__)
+app = Flask(__name__)
 
-@web_app.route("/")
+@app.route("/")
 def home():
     return "Bot is running!"
 
@@ -41,24 +49,24 @@ def main_keyboard():
 # --- Команды ---
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Привет! Я бот по русскому языку для 3 класса.\n\n"
-        "Выбирай раздел на клавиатуре или напиши название темы.\n"
-        "Команды:\n"
-        "/rules — список всех тем\n"
+        "👋 Привет! Я бот по русскому языку для 3 класса.\\n\\n"
+        "Выбирай раздел на клавиатуре или напиши название темы.\\n"
+        "Команды:\\n"
+        "/rules — список всех тем\\n"
         "/help — подсказка.",
         reply_markup=main_keyboard()
     )
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "ℹ️ Используй кнопки или напиши название темы.\n"
+        "ℹ️ Используй кнопки или напиши название темы.\\n"
         "/rules — полный список тем."
     )
 
 async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = "📑 <b>Все доступные темы:</b>\n\n"
+    text = "📑 <b>Все доступные темы:</b>\\n\\n"
     for key, data in RULES.items():
-        text += f"- {data['title']}\n"
+        text += f"- {data['title']}\\n"
     await update.message.reply_text(text, parse_mode="HTML")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -66,9 +74,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for key, data in RULES.items():
         if query in key or query in data["title"].lower():
-            text = f"<b>{data['title']}</b>\n\n"
-            text += f"<b>Правило:</b> {data['rule']}\n\n"
-            text += "<b>Примеры:</b>\n" + "\n".join(data["examples"])
+            text = f"<b>{data['title']}</b>\\n\\n"
+            text += f"<b>Правило:</b> {data['rule']}\\n\\n"
+            text += "<b>Примеры:</b>\\n" + "\\n".join(data["examples"])
             await update.message.reply_text(text, parse_mode="HTML")
             return
 
@@ -77,26 +85,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # --- Основной запуск ---
 def run_flask():
     port = int(os.environ.get("PORT", 5000))
-    web_app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)
 
 def main():
     if not BOT_TOKEN:
         logger.error("❌ BOT_TOKEN не найден!")
         return
 
-    app = Application.builder().token(BOT_TOKEN).build()
+    tg_app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("rules", cmd_rules))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    tg_app.add_handler(CommandHandler("start", cmd_start))
+    tg_app.add_handler(CommandHandler("help", cmd_help))
+    tg_app.add_handler(CommandHandler("rules", cmd_rules))
+    tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("✅ Бот запущен...")
 
     # Запускаем Flask в отдельном потоке
     Thread(target=run_flask, daemon=True).start()
 
-    app.run_polling(drop_pending_updates=True)
+    tg_app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
