@@ -98,5 +98,6 @@ def main():
 
     tg_app.run_polling(drop_pending_updates=True)
 
-if __name__ == "__main__":
-    main()
+
+# Запускаем сразу при загрузке (важно для Render!)
+main()
